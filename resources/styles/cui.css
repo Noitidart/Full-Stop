@@ -1,0 +1,15 @@
+@-moz-document url("chrome://browser/content/browser.xul") {
+	#cui_fullstop {
+		list-style-image: url('chrome://fullstop/content/resources/images/icon16.png');
+	}
+	#cui_fullstop .toolbarbutton-badge {
+		background-color: #00A8EC;
+	}
+	#cui_fullstop:hover {
+		filter: grayscale(0);
+	}
+	#cui_fullstop[cui-areatype="menu-panel"],
+	toolbarpaletteitem[place="palette"] > #cui_fullstop {
+		list-style-image: url('chrome://fullstop/content/resources/images/icon32.png');
+	}
+}
