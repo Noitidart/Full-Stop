@@ -27,8 +27,19 @@ var myWebProgressListener = {
 		webProgress.removeProgressListener(this);
 	},
 
-	onStateChange: function(webProgress, aRequest, stateFlags, status) {
+	onStateChange: function(webProgress, aRequest, flags, status) {
 		console.log('onStateChange:', arguments);
+		// figure out the flags
+		var flagStrs = [];
+		for (var f in Ci.nsIWebProgressListener) {
+			if (!/a-z/.test(f)) { // if it has any lower case letters its not a flag
+				if (flags & Ci.nsIWebProgressListener[f]) {
+					flagStrs.push(f);
+				}
+			}
+		}
+		console.info('flagStrs:', flagStrs);
+		
 		if (aRequest) {
 			aRequest.cancel(Cr.NS_BINDING_ABORTED)
 		}
@@ -52,6 +63,18 @@ var myWebProgressListener = {
 	},
 	onLocationChange: function(webProgress, aRequest, locationURI, flags) {
 		console.log('onLocationChange:', arguments);
+		
+		// figure out the flags
+		var flagStrs = [];
+		for (var f in Ci.nsIWebProgressListener) {
+			if (!/a-z/.test(f)) { // if it has any lower case letters its not a flag
+				if (flags & Ci.nsIWebProgressListener[f]) {
+					flagStrs.push(f);
+				}
+			}
+		}
+		console.info('flagStrs:', flagStrs);
+		
 		if (aRequest) {
 			aRequest.cancel(Cr.NS_BINDING_ABORTED)
 		}
@@ -61,6 +84,27 @@ var myWebProgressListener = {
 		// 	parentWindowId: getParentWindowId(webProgress.DOMWindow),
 		// 	flags,
 		// };
+	},
+	onStatusChange: function(aWebProgress, aRequest, aStatus, aMessage) {
+		console.log('onStatusChange:', arguments);
+		
+		if (aRequest) {
+			aRequest.cancel(Cr.NS_BINDING_ABORTED)
+		}
+	},
+	onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress) {
+		console.log('onProgressChange:', arguments);
+		
+		if (aRequest) {
+			aRequest.cancel(Cr.NS_BINDING_ABORTED)
+		}
+	},
+	onSecurityChange: function(aWebProgress, aRequest, aState) {
+		console.log('onSecurityChange:', arguments);
+		
+		if (aRequest) {
+			aRequest.cancel(Cr.NS_BINDING_ABORTED)
+		}
 	},
 	QueryInterface: function QueryInterface(aIID) {
 		if (aIID.equals(Ci.nsIWebProgressListener) || aIID.equals(Ci.nsISupportsWeakReference) || aIID.equals(Ci.nsISupports)) {
