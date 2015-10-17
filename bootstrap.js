@@ -31,7 +31,7 @@ const core = {
 	// }
 };
 
-const cui_cssUri = Services.io.newURI(core.addon.path.styles + 'cui.css', null, null);
+const CUI_CSSURI = Services.io.newURI(core.addon.path.styles + 'cui.css', null, null);
 
 // Lazy Imports
 const myServices = {};
@@ -39,30 +39,21 @@ XPCOMUtils.defineLazyGetter(myServices, 'sb', function () { return Services.stri
 
 // START - Addon Functionalities					
 var myWidgetListener = {
-	onWidgetAfterDOMChange: function(aNode, aNextNode, aContainer, aWasRemoval) {
-		if (aNode.id != 'cui_fullstop') {
-			return;
-		}
-		console.log('onWidgetAfterDOMChange:', arguments);
-		var aDOMWindow = aNode.ownerDocument.defaultView;
-		var domWinUtils = aDOMWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-		if (aWasRemoval) {
-			// remove css
-			console.log('remove css');			
-			domWinUtils.removeSheet(cui_cssUri, domWinUtils.AUTHOR_SHEET);
-		} else {
-			// add css
-			console.log('add css');
-			domWinUtils.loadSheet(cui_cssUri, domWinUtils.AUTHOR_SHEET);
-		}
-	},
 	onWidgetDestroyed: function(aWidgetId) {
-		console.log('a widget destroyed so removing listener, arguments:', arguments);
 		if (aWidgetId != 'cui_fullstop') {
 			return
 		}
 		console.log('my widget destoryed');
 		CustomizableUI.removeListener(myWidgetListener);
+		
+		var DOMWindows = Services.wm.getEnumerator('navigator:browser');
+		while (DOMWindows.hasMoreElements()) {
+			var DOMWindow = DOMWindows.getNext();
+			var DOMWindowUtils = DOMWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+			DOMWindowUtils.removeSheet(CUI_CSSURI, DOMWindowUtils.AUTHOR_SHEET);
+		}
+		
+		console.log('all my css styles removed from windows that had a cui, which are navigator:browser type windows');
 	}
 };
 // END - Addon Functionalities
@@ -85,11 +76,18 @@ function startup(aData, aReason) {
 		defaultArea: CustomizableUI.AREA_NAVBAR,
 		label: myServices.sb.GetStringFromName('cui_fullstop_lbl'),
 		tooltiptext: myServices.sb.GetStringFromName('cui_fullstop_tip'),
+		onBeforeCreated: function(aDOMDocument) {
+			console.error('onBeforeCreated triggered with aDOMDocument:', aDOMDocument);
+			var DOMWindow = aDOMDocument.defaultView;
+			var DOMWindowUtils = DOMWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+			DOMWindowUtils.loadSheet(CUI_CSSURI, DOMWindowUtils.AUTHOR_SHEET);
+			console.error('ok added my css');
+		},
 		onCommand: function(aEvent) {
-			var aDOMWin = aEvent.target.ownerDocument.defaultView;
+			var DOMWindow = aEvent.target.ownerDocument.defaultView;
 			console.log('ok button clicked load framescript into current tab');
 			
-			var browserMM = aDOMWin.gBrowser.selectedBrowser.messageManager;
+			var browserMM = DOMWindow.gBrowser.selectedBrowser.messageManager;
 			browserMM.loadFrameScript(core.addon.path.scripts + 'framescript.js?' + core.addon.cache_key, false);
 		}
 	});
